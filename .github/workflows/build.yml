@@ -33,10 +33,21 @@ jobs:
       - name: Build module
         run: ./gradlew :module:assembleRelease --no-daemon --stacktrace
 
+      - name: Locate build outputs
+        if: always()
+        run: |
+          echo "===== every zip in workspace ====="
+          find . -name "*.zip" -not -path "./.git/*" -exec ls -lh {} \; || true
+          echo "===== out/ tree ====="
+          ls -laR out 2>/dev/null || echo "(no out dir)"
+          echo "===== module/build/outputs tree ====="
+          find module/build/outputs -maxdepth 4 2>/dev/null || echo "(no outputs dir)"
+          echo "===== available zip/magisk tasks ====="
+          ./gradlew :module:tasks --all --no-daemon 2>/dev/null | grep -iE "zip|magisk|module" || true
+
       - uses: actions/upload-artifact@v4
         with:
           name: zygisk-il2cppdumper
-          path: |
-            out/magisk_module_release/*.zip
-            module/build/outputs/zygisk/*.zip
+          path: "**/*.zip"
           if-no-files-found: error
+
